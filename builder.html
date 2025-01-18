@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>簡易CMS</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    #preview {
+      border: 1px solid #ddd;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      margin-bottom: 10px;
+    }
+    input, select, button {
+      margin-bottom: 10px;
+    }
+    .hidden {
+      display: none;
+    }
+    .content-block {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>簡易CMS</h1>
+  <div id="editor">
+    <div class="content-block">
+      <label>h1 見出し (画像URL付き):</label><br>
+      <input type="text" id="h1-text" placeholder="見出しのテキスト">
+      <input type="url" id="h1-img" placeholder="画像のURL（WebPまたはjpg）">
+    </div>
+    
+    <div class="content-block">
+      <label>リード文:</label><br>
+      <textarea id="lead-text" placeholder="リード文を入力"></textarea>
+    </div>
+
+    <div class="content-block">
+      <label>h2 見出し:</label><br>
+      <input type="text" id="h2-text" placeholder="見出しのテキスト">
+    </div>
+
+    <div class="content-block">
+      <label>画像 (WebPとjpgのURL):</label><br>
+      <input type="url" id="img-webp" placeholder="WebP画像のURL">
+      <input type="url" id="img-jpg" placeholder="JPG画像のURL">
+    </div>
+
+    <div class="content-block">
+      <label>本文:</label><br>
+      <textarea id="body-text" placeholder="本文を入力"></textarea>
+    </div>
+
+    <button id="add-section">セクションを追加</button>
+    <button id="generate-html">HTMLを生成</button>
+  </div>
+
+  <h2>プレビュー</h2>
+  <div id="preview"></div>
+
+  <h2>生成されたHTMLソース</h2>
+  <textarea id="output-html" readonly></textarea>
+
+  <script>
+    // データの初期化
+    let content = JSON.parse(localStorage.getItem("cmsContent")) || [];
+
+    // ローカルストレージへの保存
+    const saveToLocalStorage = () => {
+      localStorage.setItem("cmsContent", JSON.stringify(content));
+    };
+
+    // プレビューの更新
+    const updatePreview = () => {
+      const preview = document.getElementById("preview");
+      preview.innerHTML = content.map(block => block.html).join("");
+    };
+
+    // HTML生成ボタン
+    document.getElementById("generate-html").addEventListener("click", () => {
+      const output = document.getElementById("output-html");
+      output.value = content.map(block => block.html).join("\n");
+    });
+
+    // セクション追加ボタン
+    document.getElementById("add-section").addEventListener("click", () => {
+      const h1Text = document.getElementById("h1-text").value;
+      const h1Img = document.getElementById("h1-img").value;
+      const leadText = document.getElementById("lead-text").value;
+      const h2Text = document.getElementById("h2-text").value;
+      const imgWebp = document.getElementById("img-webp").value;
+      const imgJpg = document.getElementById("img-jpg").value;
+      const bodyText = document.getElementById("body-text").value;
+
+      let blockHtml = "";
+      if (h1Text || h1Img) {
+        blockHtml += `<h1>${h1Text}<figure><img src="${h1Img}" alt="h1 image"></figure></h1>`;
+      }
+      if (leadText) {
+        blockHtml += `<p class="lead">${leadText}</p>`;
+      }
+      if (h2Text) {
+        blockHtml += `<h2>${h2Text}</h2>`;
+      }
+      if (imgWebp || imgJpg) {
+        blockHtml += `<figure>
+          <picture>
+            <source srcset="${imgWebp}" type="image/webp">
+            <img src="${imgJpg}" alt="Image">
+          </picture>
+        </figure>`;
+      }
+      if (bodyText) {
+        blockHtml += `<p>${bodyText}</p>`;
+      }
+
+      content.push({ html: blockHtml });
+      saveToLocalStorage();
+      updatePreview();
+    });
+
+    // ページ読み込み時にプレビュー更新
+    document.addEventListener("DOMContentLoaded", () => {
+      updatePreview();
+    });
+  </script>
+</body>
+</html>
